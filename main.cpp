@@ -28,9 +28,9 @@ void changeSize(int w, int h)
     // обнуляем матрицу
     glLoadIdentity();
     // установить параметры вьюпорта
-    //glViewport(0, 0, w, h);
+    glViewport(0, 0, w, h);
     // установить корректную перспективу
-    // gluPerspective(45.0f, ratio, 0.1f, 100.0f);
+    gluPerspective(45.0f, ratio, 0.1f, 100.0f);
     // вернуться к матрице проекции
     glMatrixMode(GL_MODELVIEW);
 }
@@ -38,7 +38,7 @@ void changeSize(int w, int h)
 void drawSnowMan()
 {
     // Источник: https://opengl.org.ru/books/open_gl/chapter2.4.html
-    glPushMatrix();         // сохраняем текущие координаты 
+/*     glPushMatrix();         // сохраняем текущие координаты 
 
     glTranslated(0.4f,0.5,0);  // сдвигаемся по оси Х на 1.4 
     glColor3d(0,1,0); 
@@ -51,9 +51,9 @@ void drawSnowMan()
     glPopMatrix();          // возвращаемся к старой системе координат 
     glColor3d(1,0,0); 
     glutSolidSphere(0.3, 32, 32);   // рисуем сферу в точке (0,0,0) в абсолютных координатах
+ */
 
-
-/*     glColor3f(1.0f, 1.0f, 1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
 
     // тело снеговика
     glTranslatef(0.0f, 0.75f, 0.0f);
@@ -75,7 +75,7 @@ void drawSnowMan()
     // нос снеговика
     glColor3f(1.0f, 0.5f, 0.5f);
     glRotatef(0.0f, 1.0f, 0.0f, 0.0f);
-    glutSolidCone(0.08f, 0.5f, 10, 2); */
+    glutSolidCone(0.08f, 0.5f, 10, 2);
 }
 
 void computePos(float deltaMove)
