@@ -8,12 +8,22 @@
 #include <glut.h>
 #endif
 
-double red = 0.0f;
-double green = 0.0f;
-double blue = 0.0f;
-double step = 0.05f;
+// идентификаторы меню
+int menu;
+
+// угол поворота камеры
+float angle=0.0;
+// координаты вектора направления движения камеры
+float lx=0.0f, lz=-1.0f;
+// XZ позиция камеры
+float x=0.0f, z=5.0f;
+// Движение камеры. Переменные инициализируются нулевыми значениями когда клавиши не нажаты
+float deltaAngle = 0.0f;
+float deltaMove = 0;
 
 int width, height;
+
+char statusText[100] = {'\0'};
 
 // Для удобства задания позиции
 struct Position {
@@ -64,18 +74,23 @@ struct Circle {
 
 
 // Цветовые константы
-const Color RED = Color(1.0f, 0, 0);
 const Color BLACK = Color(0, 0, 0);
+const Color RED = Color(1.0f, 0, 0);
 const Color GREEN = Color(0, 1.0f, 0);
 const Color BLUE = Color(0, 0, 1.0f);
 const Color WHITE = Color(1.0f, 1.0f, 1.0f);
 const Color GREY = Color(0.7f, 0.7f, 0.7f);
+const Color DARK = Color(0.4f, 0.4f, 0.4f);
+const Color YELLOW = Color(1, 1, 0);
+const Color PINK = Color(1, 0, 1);
+const Color SKY = Color(0, 1, 1);
+const Color ORANGE = Color(1, 0.75f, 0);
 
+// массив с цветами
+const Color colors[] = {RED, ORANGE, YELLOW, GREEN, SKY, BLUE, PINK, WHITE, GREY, DARK};
+Circle circles[10];
 
-void shiftColors()
-{
-}
-
+// Нарисовать надпись
 void renderStrokeFontString(Position pos, void *font, char *string) {  
 	glPushMatrix();
 	glTranslatef(pos.x, pos.y, pos.z);
@@ -104,17 +119,11 @@ void renderCircle(Circle circle) {
 
 void renderCircles()
 {
-    shiftColors();
 
-    Circle ball1 = Circle(Position(-1.0f, 1.0f, -5.0f), 0.2f, RED, 1);
-    Circle ball2 = Circle(Position(1.0f, 1.0f, -5.0f), 0.3f, GREEN, 2);
-    Circle ball3 = Circle(Position(-1.0f, -1.0f, -5.0f), 0.1f, BLUE, 3);
-    Circle ball4 = Circle(Position(1.0f, -1.0f, -5.0f), 0.5f, WHITE, 4);
-
-    renderCircle(ball1);
-    renderCircle(ball2);
-    renderCircle(ball3);
-    renderCircle(ball4);
+    for (int i=0; i<10; i++) {
+        circles[i] = Circle(Position(-8.0f+1.5f*i, 1.0f, -5.0f), 0.1f+0.05f*i, colors[i], i);
+        renderCircle(circles[i]);
+    }
 }
 
 // Функция изменения размеров окна с сохранением пропорций
@@ -184,10 +193,29 @@ void renderBitmapString(Position pos, void *font, char *string) {
 	}
 }
 
+void computePos(float deltaMove) 
+{
+	x += deltaMove * lx * 0.1f;
+	z += deltaMove * lz * 0.1f;
+}
+ 
+void computeDir(float deltaAngle)
+{
+	angle += deltaAngle;
+	lx = sin(angle);
+	lz = -cos(angle);
+}
 
 // Функция создания изображения
 void renderScene()
 {
+	if (deltaMove) {
+		computePos(deltaMove);
+    }
+	if (deltaAngle) {
+		computeDir(deltaAngle);
+    }
+
     // очистить буфер цвета и глубины
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -195,9 +223,9 @@ void renderScene()
     glLoadIdentity();
 
     // камера
-    gluLookAt(0, 0, 3.0f,
-              0, 0, 0,
-              0, 1.0f, 0);
+ 	gluLookAt(	   x,	1.0f,	  z,
+				x+lx,	1.0f,  z+lz,
+				0.0f,   1.0f,  0.0f		);
 
     // поверхность
     glColor3f(0.8f, 0.8f, 0.8f);
@@ -212,10 +240,11 @@ void renderScene()
     renderCircles();
 
     // Нарисовать текст (русские буквы не работают)
+    glColor3f(0.8f, 0.8f, 0.8f);
     setOrthographicProjection();
 	    glPushMatrix();
 	        glLoadIdentity();
-	        renderBitmapString(Position(20, 30, 0), GLUT_BITMAP_HELVETICA_18, "Some text");
+	        renderBitmapString(Position(20, 30, 0), GLUT_BITMAP_HELVETICA_18, statusText);
 	    glPopMatrix();
 	restorePerspectiveProjection();
 
@@ -229,8 +258,67 @@ void processNormalKeys(unsigned char key, int x, int y)
     // Выход по Esc
     if (key == 27)
     {
+        glutDestroyMenu(menu);
         exit(0);
     }
+}
+
+void pressKey(int key, int x, int y) {
+ 
+	switch (key) {
+		case GLUT_KEY_LEFT:
+			deltaAngle = -0.01f;
+			break;
+		case GLUT_KEY_RIGHT:
+			deltaAngle = 0.01f;
+			break;
+		case GLUT_KEY_UP:
+			deltaMove = 0.5f;
+			break;
+		case GLUT_KEY_DOWN:
+			deltaMove = -0.5f;
+			break;
+	}
+}
+ 
+void releaseKey(int key, int x, int y) {
+ 
+	switch (key) {
+		case GLUT_KEY_LEFT:
+		case GLUT_KEY_RIGHT: 
+			deltaAngle = 0.0f;
+			break;
+		case GLUT_KEY_UP:
+		case GLUT_KEY_DOWN: 
+			deltaMove = 0.0f;
+			break;
+	}
+}
+
+void processMenu(int option) {
+ 
+	switch (option) {
+		case 1: // randomize
+            strcpy(statusText, "Randomize array");
+			break;
+		case 2: // insertion
+            strcpy(statusText, "Insertion sort");
+			break;
+		case 3: // bubble
+            strcpy(statusText, "Bubble sort");
+			break;
+	}
+}
+
+void createPopupMenus() {
+ 
+	menu = glutCreateMenu(processMenu);
+	glutAddMenuEntry("Randomize array",1 );
+	glutAddMenuEntry("Insertion sort",2 );
+	glutAddMenuEntry("Bubble sort",3 );
+
+	// прикрепить меню к правой кнопке
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 int main(int argc, char **argv)
@@ -250,6 +338,12 @@ int main(int argc, char **argv)
     // Функции работы с клавиатурой
     glutIgnoreKeyRepeat(1);
     glutKeyboardFunc(processNormalKeys);
+	glutIdleFunc(renderScene);
+	glutSpecialFunc(pressKey);
+	glutSpecialUpFunc(releaseKey);
+
+    // Создать меню
+    createPopupMenus();
 
     // Главный цикл
     glutMainLoop();

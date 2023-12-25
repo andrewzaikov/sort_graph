@@ -45,14 +45,17 @@ int main()
 
     insertionSort(n, arr);
 
+    printf("l ... r ... a\n");
     for (int i = 0; i < cnt; i++)
     {
         printf("%d ... %d ... %c\n", left[i], right[i], act[i]);
     }
+    printf("arr = {");
     for (int i = 0; i < n; i++)
     {
         printf("%d ", arr[i]);
     }
+    printf("}");
 
     delete[] left;
     delete[] right;
