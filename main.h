@@ -22,8 +22,8 @@ struct Position
 struct Move
 {
     int item;
-    Position start = Position();
-    Position stop = Position();
+    Position start;
+    Position stop;
 
     Move() {}
 
@@ -55,8 +55,8 @@ struct Color
 // Структура (класс) - Шарик
 struct Circle
 {
-    Position pos = Position();
-    Color clr = Color();
+    Position pos;
+    Color clr;
     double r;
     char name[5];
 
