@@ -7,6 +7,9 @@
 #else
 #include <glut.h>
 #endif
+#include "sort_ins.h"
+#include "main.h"
+
 
 // идентификаторы меню
 int menu;
@@ -30,91 +33,10 @@ int width, height;
 // Массив шариков заполнен?
 bool arrayFilled = false;
 
-// Структура (класс) - положение
-struct Position
-{
-    double x;
-    double y;
-    double z;
-
-    Position() {}
-
-    Position(double x, double y, double z)
-    {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-    }
-};
-
-// Структура (класс) - движение
-struct Move
-{
-    int item;
-    Position start = Position();
-    Position stop = Position();
-
-    Move() {}
-
-    Move(int item, Position start, Position stop)
-    {
-        this->item = item;
-        this->start = start;
-        this->stop = stop;
-    }
-};
-
-// Структура (класс) - цвет
-struct Color
-{
-    double r;
-    double g;
-    double b;
-
-    Color() {}
-
-    Color(double r, double g, double b)
-    {
-        this->r = r;
-        this->g = g;
-        this->b = b;
-    }
-};
-
-// Структура (класс) - Шарик
-struct Circle
-{
-    Position pos = Position();
-    Color clr = Color();
-    double r;
-    char name[5];
-
-    Circle() {}
-
-    Circle(Position pos, double r, Color clr, int num)
-    {
-        this->pos = pos;
-        this->clr = clr;
-        this->r = r;
-        sprintf(this->name, "%d", num);
-    }
-};
-
-// Цветовые константы
-const Color BLACK = Color(0, 0, 0);
-const Color RED = Color(1.0f, 0, 0);
-const Color GREEN = Color(0, 1.0f, 0);
-const Color BLUE = Color(0, 0, 1.0f);
-const Color WHITE = Color(1.0f, 1.0f, 1.0f);
-const Color GREY = Color(0.7f, 0.7f, 0.7f);
-const Color DARK = Color(0.4f, 0.4f, 0.4f);
-const Color YELLOW = Color(1, 1, 0);
-const Color PINK = Color(1, 0, 1);
-const Color SKY = Color(0, 1, 1);
-const Color ORANGE = Color(1, 0.75f, 0);
 
 // массив с цветами
-const Color colors[] = {RED, ORANGE, YELLOW, GREEN, SKY, BLUE, PINK, WHITE, GREY, DARK};
+const int N = 10;
+const Color colors[N] = {RED, ORANGE, YELLOW, GREEN, SKY, BLUE, PINK, WHITE, GREY, DARK};
 
 // массив с шариками
 Circle circles[10];
@@ -265,13 +187,20 @@ void computeDir(float deltaAngle)
 // Заполнить массив с шариками случайными значениями
 void randomizeArray()
 {
-    int k;
+    int k, *arr;
+    arr = new int[N];
 
-    for (int i = 0; i < 10; i++)
+    clearLog();
+    initLog(N);
+
+    for (int i = 0; i < N; i++)
     {
-        k = random() % 10;
-        circles[i] = Circle(Position(-8.0f + 1.5f * i, 1.0f, -5.0f), 0.1f + 0.05f * k, colors[i], 10 * k + i);
+        k = random() % 99 + 1;
+        arr[i] = k;
+        circles[i] = Circle(Position(-8.0f + 1.5f * i, 1.0f, -5.0f), 0.1f + 0.05f * (k/10), colors[k%10], k);
     }
+    insertionSort(N, arr);
+    delete []arr;
 }
 
 // Для теста: анимация, изменить 0 и 3 элементы
@@ -340,10 +269,12 @@ void computeNextMove()
 // Функция создания изображения
 void renderScene()
 {
+    // Движение камеры
     if (deltaMove)
     {
         computePos(deltaMove);
     }
+    // Поворот камеры
     if (deltaAngle)
     {
         computeDir(deltaAngle);
@@ -381,7 +312,7 @@ void renderScene()
     // Здесь основной алгоритм рисования
     renderCircles();
 
-    // Нарисовать текст (русские буквы не работают)
+    // Нарисовать статический текст (русские буквы не работают)
     glColor3f(0.8f, 0.8f, 0.8f);
     setOrthographicProjection();
     glPushMatrix();
@@ -401,6 +332,7 @@ void processNormalKeys(unsigned char key, int x, int y)
     if (key == 27)
     {
         glutDestroyMenu(menu);
+        clearLog();
         exit(0);
     }
 }
